@@ -8,17 +8,16 @@
 using namespace std;
 
 int main() {
-    // Load persisted data (books and transactions) from CSV files if they exist
+    // Load persisted data (books and transactions) from CSV
     Library::instance().loadFromCSV();
 
     // Create example users for demonstration purposes
-    // In a real system, users would also be persisted in a database or file
     Admin admin(1, "Alice Admin", "alice@lib.org", "2023-01-01", &Library::instance());
     Librarian librarian(2, "Bob Librarian", "bob@lib.org", "2023-02-01", &Library::instance());
     Member member(3, "Carol Member", "carol@lib.org", "2023-03-01", &Library::instance());
     NonMember guest(4, "Dave Guest", "dave@guest.org", "2023-04-01", &Library::instance());
 
-    // Seed demo books if the library is empty
+    // Seed demo books 
     if (Library::instance().getAllBooks().empty()) {
         Library::instance().addBook("The C++ Programming Language", "Bjarne Stroustrup", "9780321563842", 3);
         Library::instance().addBook("Clean Code", "Robert C. Martin", "9780132350884", 2);
