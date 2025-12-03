@@ -1,6 +1,8 @@
+#include <sstream>
+#include <iomanip>
 #include "Fine.h" // include the Fine class header
 
-using namespace std; // use standard namespace
+using namespace std; 
 
 // Constructor that sets the fine amount
 Fine::Fine(double amount_)
