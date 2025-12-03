@@ -60,7 +60,7 @@ void NonMember::menu() {
             }
 
         } else if (opt == 3) {
-            // Rent a book (simulated $3 charge)
+            // Rent a book 
             try {
                 int bookId = 0;
                 string checkoutDate, dueDate;
