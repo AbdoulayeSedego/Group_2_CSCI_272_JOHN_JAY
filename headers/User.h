@@ -1,3 +1,6 @@
+#ifndef USER_H
+#define USER_H
+
 /**
  * User.h & User.cpp
  *
@@ -71,3 +74,5 @@ public:
     virtual ~User() = default;
 
 };
+
+#endif
