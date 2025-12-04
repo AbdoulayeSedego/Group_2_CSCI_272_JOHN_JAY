@@ -1,35 +1,25 @@
 /**
  * Librarian.cpp
- *
- * Purpose: Implementation file for the Librarian class.
- *          Contains all method definitions for librarian operations.
- *
- * Author: Member 3
- * OOP Concepts: Inheritance, Polymorphism (virtual function override),
- *               Exception Handling, Input Validation
- *
+ * Author: Abdoulaye Sedego
  * Key Responsibilities:
  * - Process book checkouts and returns
  * - Calculate late fees
  * - View and manage transactions
  **/
 
-#include "../headers/Librarian.h"  // Include Librarian header
-#include <iostream>                 // For console I/O (cin, cout)
-#include <iomanip>                  // For output formatting (setprecision)
-#include <limits>                   // For numeric_limits (input clearing)
+#include "../headers/Librarian.h"
+#include "../headers/Library.h"     // For Library singleton access
+#include <iostream>
+#include <iomanip>
+#include <limits>
 #include <stdexcept>                // For exceptions
+#include <ctime>                    // For getting current date
 
 // ==================== CONSTRUCTORS ====================
 
-/**
- * Default Constructor
- * Creates a Librarian with empty/default values
- *
- * Implementation note:
- * - Calls User() default constructor first (base class initialization)
- * - Then initializes Librarian-specific members (none currently)
- */
+
+ // Default Constructor
+
 Librarian::Librarian()
     : User()  // Explicitly call base class default constructor
 {
@@ -38,7 +28,7 @@ Librarian::Librarian()
     setUserType("Librarian");
 }
 
-/**
+/** Documention Only
  * Parameterized Constructor
  * Creates a fully initialized Librarian
  *
@@ -47,9 +37,6 @@ Librarian::Librarian()
  * @param email          - Email address
  * @param userType       - Should be "Librarian"
  * @param membershipDate - Employment start date
- *
- * Note: The initializer list calls the User base class constructor
- *       with all the provided parameters
  */
 Librarian::Librarian(int userID, const std::string& name,
                      const std::string& email, const std::string& userType,
@@ -66,16 +53,8 @@ Librarian::Librarian(int userID, const std::string& name,
 
 // ==================== OVERRIDDEN VIRTUAL FUNCTIONS ====================
 
-/**
+/*
  * display() - Displays librarian information to console
- *
- * This function OVERRIDES the pure virtual display() from User class
- * POLYMORPHISM: When we call display() on a User* pointing to a Librarian,
- *               THIS function executes (not User::display())
- *
- * Example of polymorphism:
- *   User* user = new Librarian(1, "John", "john@lib.com", "Librarian", "2024-01-01");
- *   user->display();  // Calls Librarian::display(), NOT User::display()
  */
 void Librarian::display() const {
     std::cout << "\n";
@@ -93,7 +72,6 @@ void Librarian::display() const {
  * menu() - Displays and handles the librarian menu
  *
  * This function OVERRIDES the pure virtual menu() from User class
- *
  * Menu Options:
  * 1. Process Checkout - Check out a book to a user
  * 2. Process Return - Return a book and calculate fees
@@ -102,7 +80,7 @@ void Librarian::display() const {
  * 5. Exit - Return to main menu
  *
  * Edge Cases Handled:
- * - Invalid menu choice (non-integer input)
+ * - Invalid menu choice
  * - Out of range menu choice
  * - Empty input
  */
@@ -133,15 +111,13 @@ void Librarian::menu() {
             // Clear the error state
             std::cin.clear();
             // Discard invalid input from the buffer
-            // numeric_limits<streamsize>::max() = maximum possible stream size
-            // '\n' = discard until newline
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
             std::cout << "\n[ERROR] Invalid input! Please enter a number (1-5).\n";
             continue;  // Go back to start of loop
         }
 
-        // Clear any remaining input (e.g., if user entered "1abc")
+        // Clear any remaining input
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         // Process the menu choice using switch statement
@@ -187,196 +163,182 @@ void Librarian::menu() {
 // ==================== LIBRARIAN-SPECIFIC FUNCTIONS ====================
 
 /**
+ * Helper function to get current date as YYYY-MM-DD string
+ */
+static std::string getCurrentDate() {
+    std::time_t now = std::time(nullptr);
+    std::tm* tm = std::localtime(&now);
+    char buffer[11];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", tm);
+    return std::string(buffer);
+}
+
+/**
+ * Helper function to add days to a date string (YYYY-MM-DD)
+ * Returns new date as YYYY-MM-DD string
+ */
+static std::string addDays(const std::string& dateStr, int days) {
+    int y, m, d;
+    sscanf(dateStr.c_str(), "%d-%d-%d", &y, &m, &d);
+
+    std::tm tm = {};
+    tm.tm_year = y - 1900;
+    tm.tm_mon = m - 1;
+    tm.tm_mday = d + days;
+
+    std::mktime(&tm);  // Normalizes the date
+
+    char buffer[11];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
+    return std::string(buffer);
+}
+
+/**
  * processCheckout - Handle a book checkout operation
  *
  * Workflow:
- * 1. Prompt for User ID
- * 2. Prompt for Book ID
- * 3. (In full implementation: verify user exists, verify book available)
- * 4. Create transaction record
- * 5. Update book inventory
- *
- * Note: This is a simplified implementation. In the full system,
- *       this would interact with Library class and FileManager.
+ * 1. Prompt for User ID (integer)
+ * 2. Prompt for Book ID (integer)
+ * 3. Verify book exists and is available
+ * 4. Create transaction record via Library::checkoutBook()
+ * 5. Display confirmation
  *
  * Edge Cases Handled:
- * - Empty user ID input
- * - Empty book ID input
- * - Invalid input types
+ * - Invalid user ID input
+ * - Invalid book ID input
+ * - Book not found
+ * - No copies available
  */
 void Librarian::processCheckout() {
-    std::string userId;
-    std::string bookId;
+    int userId = 0;
+    int bookId = 0;
 
-    // Get User ID
-    std::cout << "Enter User ID (e.g., U001): ";
-    std::getline(std::cin, userId);
-
-    // ===== EDGE CASE: Empty user ID =====
-    if (userId.empty()) {
-        std::cout << "[ERROR] User ID cannot be empty.\n";
+    // Get User ID (integer)
+    std::cout << "Enter User ID (integer): ";
+    if (!(std::cin >> userId)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "[ERROR] Invalid User ID. Must be an integer.\n";
         return;
     }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    // Get Book ID
-    std::cout << "Enter Book ID (e.g., B001): ";
-    std::getline(std::cin, bookId);
-
-    // ===== EDGE CASE: Empty book ID =====
-    if (bookId.empty()) {
-        std::cout << "[ERROR] Book ID cannot be empty.\n";
+    // Get Book ID (integer)
+    std::cout << "Enter Book ID (integer): ";
+    if (!(std::cin >> bookId)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "[ERROR] Invalid Book ID. Must be an integer.\n";
         return;
     }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    // ===== PLACEHOLDER IMPLEMENTATION =====
-    // In the full system, this would:
-    // 1. Call Library::getInstance() to get the library
-    // 2. Find the book by ID
-    // 3. Check if book.isAvailable()
-    // 4. If available, call book.checkout()
-    // 5. Create a Transaction object
-    // 6. Add transaction to the system
-    // 7. Save to transactions.csv
+    // Get checkout and due dates
+    std::string checkoutDate = getCurrentDate();
+    std::string dueDate = addDays(checkoutDate, DEFAULT_LOAN_PERIOD);
 
-    std::cout << "\n";
-    std::cout << "========================================\n";
-    std::cout << "CHECKOUT PROCESSED (Placeholder)\n";
-    std::cout << "========================================\n";
-    std::cout << "User ID: " << userId << "\n";
-    std::cout << "Book ID: " << bookId << "\n";
-    std::cout << "Checkout Date: [Current Date]\n";
-    std::cout << "Due Date: [Current Date + 14 days]\n";
-    std::cout << "Status: Active\n";
-    std::cout << "========================================\n";
-    std::cout << "\n";
-
-    // TODO: Implement full checkout logic when integrating with Library class
-    // Example of what full implementation would look like:
-    /*
     try {
-        Library* lib = Library::getInstance();
-        Book* book = lib->findBook(bookId);
-
-        if (book == nullptr) {
-            throw std::runtime_error("Book not found: " + bookId);
+        // Find the book first to display its title
+        Book* book = Library::instance().findBookById(bookId);
+        if (!book) {
+            throw std::runtime_error("Book not found with ID: " + std::to_string(bookId));
         }
 
         if (!book->isAvailable()) {
             throw std::runtime_error("No copies available for: " + book->getTitle());
         }
 
-        // Create transaction
-        std::string transId = generateTransactionId();
-        std::string today = getCurrentDate();
-        std::string dueDate = addDays(today, DEFAULT_LOAN_PERIOD);
+        // Create transaction via Library (handles book checkout internally)
+        int transId = Library::instance().checkoutBook(userId, bookId, checkoutDate, dueDate);
 
-        Transaction trans(transId, userId, bookId, today, dueDate);
-
-        // Update book and save
-        book->checkout();
-        lib->addTransaction(trans);
-        lib->saveToFile();
-
-        std::cout << "Checkout successful!\n";
+        // Display success message
+        std::cout << "\n";
+        std::cout << "========================================\n";
+        std::cout << "        CHECKOUT SUCCESSFUL             \n";
+        std::cout << "========================================\n";
+        std::cout << "Transaction ID: " << transId << "\n";
+        std::cout << "User ID: " << userId << "\n";
+        std::cout << "Book: " << book->getTitle() << " (ID: " << bookId << ")\n";
+        std::cout << "Checkout Date: " << checkoutDate << "\n";
+        std::cout << "Due Date: " << dueDate << "\n";
+        std::cout << "Status: Active\n";
+        std::cout << "========================================\n";
 
     } catch (const std::exception& e) {
-        std::cout << "[ERROR] " << e.what() << "\n";
+        std::cout << "[ERROR] Checkout failed: " << e.what() << "\n";
     }
-    */
 }
 
 /**
  * processReturn - Handle a book return operation
  *
  * Workflow:
- * 1. Prompt for Transaction ID
- * 2. (In full implementation: find transaction)
- * 3. Calculate days late
- * 4. Calculate fine if late
- * 5. Update transaction status
- * 6. Update book inventory
+ * 1. Prompt for Transaction ID (integer)
+ * 2. Find transaction in Library
+ * 3. Process return via Library::processReturn()
+ * 4. Display fine information if applicable
  *
  * Edge Cases Handled:
- * - Empty transaction ID
+ * - Invalid transaction ID input
  * - Transaction not found
- * - Already returned transaction
+ * - Transaction already completed
  */
 void Librarian::processReturn() {
-    std::string transactionId;
+    int transactionId = 0;
 
-    // Get Transaction ID
-    std::cout << "Enter Transaction ID (e.g., T001): ";
-    std::getline(std::cin, transactionId);
-
-    // ===== EDGE CASE: Empty transaction ID =====
-    if (transactionId.empty()) {
-        std::cout << "[ERROR] Transaction ID cannot be empty.\n";
+    // Get Transaction ID (integer)
+    std::cout << "Enter Transaction ID (integer): ";
+    if (!(std::cin >> transactionId)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "[ERROR] Invalid Transaction ID. Must be an integer.\n";
         return;
     }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    // ===== PLACEHOLDER IMPLEMENTATION =====
-    // Simulating a late return for demonstration
+    // Get return date (current date)
+    std::string returnDate = getCurrentDate();
 
-    // Simulated days late (in real implementation, this would be calculated)
-    int simulatedDaysLate = 5;  // Example: 5 days late
-    double fine = calculateFine(simulatedDaysLate);
-
-    std::cout << "\n";
-    std::cout << "========================================\n";
-    std::cout << "RETURN PROCESSED (Placeholder)\n";
-    std::cout << "========================================\n";
-    std::cout << "Transaction ID: " << transactionId << "\n";
-    std::cout << "Return Date: [Current Date]\n";
-
-    if (simulatedDaysLate > 0) {
-        std::cout << "Days Late: " << simulatedDaysLate << "\n";
-        // setprecision(2) and fixed ensure we show exactly 2 decimal places
-        std::cout << "Late Fee: $" << std::fixed << std::setprecision(2) << fine << "\n";
-        std::cout << "Status: Returned-Late\n";
-    } else {
-        std::cout << "Days Late: 0 (On time!)\n";
-        std::cout << "Late Fee: $0.00\n";
-        std::cout << "Status: Returned\n";
-    }
-    std::cout << "========================================\n";
-    std::cout << "\n";
-
-    // TODO: Implement full return logic when integrating with Library class
-    // Example:
-    /*
     try {
-        Library* lib = Library::getInstance();
-        Transaction* trans = lib->findTransaction(transactionId);
+        // Process return via Library (handles transaction update and book return)
+        Fine fine = Library::instance().processReturn(transactionId, returnDate);
 
-        if (trans == nullptr) {
-            throw std::runtime_error("Transaction not found: " + transactionId);
+        // Get the transaction to display details
+        auto& transactions = Library::instance().getTransactions();
+        Transaction* trans = nullptr;
+        for (auto& t : transactions) {
+            if (t.getTransactionId() == transactionId) {
+                trans = &t;
+                break;
+            }
         }
 
-        if (!trans->isActive()) {
-            throw std::runtime_error("Transaction already completed");
-        }
+        // Calculate days late for display
+        int daysLate = trans ? trans->calculateDaysLate() : 0;
+        double fineAmount = fine.getAmount();
 
-        // Process return
-        std::string today = getCurrentDate();
-        trans->completeReturn(today);
+        // Display success message
+        std::cout << "\n";
+        std::cout << "========================================\n";
+        std::cout << "        RETURN PROCESSED                \n";
+        std::cout << "========================================\n";
+        std::cout << "Transaction ID: " << transactionId << "\n";
+        std::cout << "Return Date: " << returnDate << "\n";
 
-        // Calculate fine
-        int daysLate = trans->calculateDaysLate();
         if (daysLate > 0) {
-            double fineAmount = calculateFine(daysLate);
-            // Create Fine object and save
+            std::cout << "Days Late: " << daysLate << "\n";
+            std::cout << "Late Fee: $" << std::fixed << std::setprecision(2) << fineAmount << "\n";
+            std::cout << "Status: Returned-Late\n";
+        } else {
+            std::cout << "Days Late: 0 (On time!)\n";
+            std::cout << "Late Fee: $0.00\n";
+            std::cout << "Status: Returned\n";
         }
-
-        // Update book inventory
-        Book* book = lib->findBook(trans->getBookId());
-        book->returnBook();
-
-        lib->saveToFile();
+        std::cout << "========================================\n";
 
     } catch (const std::exception& e) {
-        std::cout << "[ERROR] " << e.what() << "\n";
+        std::cout << "[ERROR] Return failed: " << e.what() << "\n";
     }
-    */
 }
 
 /**
@@ -414,102 +376,144 @@ double Librarian::calculateFine(int daysLate) const {
 
 /**
  * viewAllTransactions - Display all transaction records
- *
- * In full implementation, this would:
- * 1. Get all transactions from Library or FileManager
- * 2. Display each transaction's details
+ * 1. Get all transactions from Library
+ * 2. Display each transaction's details in a table format
  * 3. Show statistics (total active, total completed, etc.)
  */
 void Librarian::viewAllTransactions() const {
+    // Get transactions from Library singleton
+    auto& transactions = Library::instance().getTransactions();
+
     std::cout << "\n";
     std::cout << "============================================\n";
-    std::cout << "        ALL TRANSACTIONS (Placeholder)      \n";
+    std::cout << "           ALL TRANSACTIONS                 \n";
     std::cout << "============================================\n";
     std::cout << "\n";
-
-    // ===== PLACEHOLDER: Sample transaction display =====
-    // In real implementation, this would loop through all transactions
-
-    std::cout << "Transaction ID | User ID | Book ID | Status\n";
-    std::cout << "--------------------------------------------\n";
-    std::cout << "T001           | U001    | B001    | Returned\n";
-    std::cout << "T002           | U002    | B002    | Active\n";
-    std::cout << "T003           | U001    | B003    | Returned-Late\n";
-    std::cout << "--------------------------------------------\n";
-    std::cout << "\n";
-    std::cout << "Total Transactions: 3\n";
-    std::cout << "Active: 1 | Returned: 1 | Late: 1\n";
-    std::cout << "\n";
-
-    // TODO: Implement when integrating with Library/FileManager
-    /*
-    Library* lib = Library::getInstance();
-    std::vector<Transaction> transactions = lib->getAllTransactions();
 
     if (transactions.empty()) {
         std::cout << "No transactions found.\n";
+        std::cout << "============================================\n";
         return;
     }
 
+    // Display header
+    std::cout << std::left
+              << std::setw(8) << "Trans ID"
+              << std::setw(10) << "User ID"
+              << std::setw(10) << "Book ID"
+              << std::setw(14) << "Checkout"
+              << std::setw(14) << "Due Date"
+              << std::setw(14) << "Returned"
+              << "Status\n";
+    std::cout << "--------------------------------------------"
+              << "--------------------------------------------\n";
+
+    // Count statistics
     int activeCount = 0, returnedCount = 0, lateCount = 0;
 
+    // Display each transaction
     for (const auto& trans : transactions) {
-        trans.display();
+        std::cout << std::left
+                  << std::setw(8) << trans.getTransactionId()
+                  << std::setw(10) << trans.getUserId()
+                  << std::setw(10) << trans.getBookId()
+                  << std::setw(14) << trans.getCheckoutDate()
+                  << std::setw(14) << trans.getDueDate()
+                  << std::setw(14) << (trans.getReturnDate().empty() ? "-" : trans.getReturnDate())
+                  << trans.getStatus() << "\n";
 
+        // Count by status
         if (trans.getStatus() == "Active") activeCount++;
         else if (trans.getStatus() == "Returned") returnedCount++;
         else if (trans.getStatus() == "Returned-Late") lateCount++;
     }
 
-    std::cout << "Total: " << transactions.size() << "\n";
-    std::cout << "Active: " << activeCount << " | Returned: " << returnedCount
+    std::cout << "--------------------------------------------"
+              << "--------------------------------------------\n";
+    std::cout << "\n";
+    std::cout << "Total Transactions: " << transactions.size() << "\n";
+    std::cout << "Active: " << activeCount
+              << " | Returned: " << returnedCount
               << " | Late: " << lateCount << "\n";
-    */
+    std::cout << "============================================\n";
 }
 
 /**
  * generateReport - Generate a summary report of library activity
  *
  * Report includes:
- * - Total books in system
- * - Total users
+ * - Total books in system (total titles, total copies, available copies)
  * - Active checkouts
  * - Overdue books
  * - Total fines collected
  */
 void Librarian::generateReport() const {
+    // Get data from Library singleton
+    auto& books = Library::instance().getAllBooks();
+    auto& transactions = Library::instance().getTransactions();
+    auto& fines = Library::instance().getFines();
+
+    // Calculate book statistics
+    int totalTitles = static_cast<int>(books.size());
+    int totalCopies = 0;
+    int availableCopies = 0;
+
+    for (const auto& book : books) {
+        totalCopies += book.getTotalCopies();
+        availableCopies += book.getAvailableCopies();
+    }
+
+    int checkedOutCopies = totalCopies - availableCopies;
+
+    // Calculate transaction statistics
+    int totalTransactions = static_cast<int>(transactions.size());
+    int activeCount = 0;
+    int returnedCount = 0;
+    int lateCount = 0;
+
+    std::string today = getCurrentDate();
+
+    for (const auto& trans : transactions) {
+        if (trans.getStatus() == "Active") {
+            activeCount++;
+        } else if (trans.getStatus() == "Returned") {
+            returnedCount++;
+        } else if (trans.getStatus() == "Returned-Late") {
+            lateCount++;
+        }
+    }
+
+    // Calculate fine statistics
+    double totalFinesAmount = 0.0;
+    for (const auto& fine : fines) {
+        totalFinesAmount += fine.getAmount();
+    }
+
+    // Display report
     std::cout << "\n";
     std::cout << "============================================\n";
-    std::cout << "         LIBRARY REPORT (Placeholder)       \n";
+    std::cout << "           LIBRARY REPORT                   \n";
     std::cout << "============================================\n";
     std::cout << "\n";
 
-    // ===== PLACEHOLDER: Sample report data =====
     std::cout << "INVENTORY SUMMARY\n";
-    std::cout << "  Total Books: 50\n";
-    std::cout << "  Available: 42\n";
-    std::cout << "  Checked Out: 8\n";
-    std::cout << "\n";
-
-    std::cout << "USER SUMMARY\n";
-    std::cout << "  Total Users: 25\n";
-    std::cout << "  Members: 18\n";
-    std::cout << "  Non-Members: 7\n";
+    std::cout << "  Total Book Titles: " << totalTitles << "\n";
+    std::cout << "  Total Copies: " << totalCopies << "\n";
+    std::cout << "  Available Copies: " << availableCopies << "\n";
+    std::cout << "  Checked Out: " << checkedOutCopies << "\n";
     std::cout << "\n";
 
     std::cout << "TRANSACTION SUMMARY\n";
-    std::cout << "  Total Checkouts (all time): 150\n";
-    std::cout << "  Active Rentals: 8\n";
-    std::cout << "  Overdue Books: 2\n";
+    std::cout << "  Total Transactions: " << totalTransactions << "\n";
+    std::cout << "  Active Rentals: " << activeCount << "\n";
+    std::cout << "  Completed Returns: " << returnedCount << "\n";
+    std::cout << "  Late Returns: " << lateCount << "\n";
     std::cout << "\n";
 
     std::cout << "FINANCIAL SUMMARY\n";
-    std::cout << "  Total Fines Issued: $45.50\n";
-    std::cout << "  Fines Collected: $38.00\n";
-    std::cout << "  Outstanding Fines: $7.50\n";
+    std::cout << "  Total Fines Collected: $" << std::fixed << std::setprecision(2)
+              << totalFinesAmount << "\n";
+    std::cout << "  Number of Fines: " << fines.size() << "\n";
     std::cout << "\n";
     std::cout << "============================================\n";
-    std::cout << "\n";
-
-    // TODO: Implement with real data from Library/FileManager
 }
