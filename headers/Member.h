@@ -2,13 +2,13 @@
 #define MEMBER_H
 
 #include "User.h"
-using namespace std;
 
 // Forward declaration of Library class
 class Library;
 
-// Member class inherits from User
-// Represents a registered library member who can search and view books
+// Member class is subclass inherits from User
+// Represents a registered library member who can search and view books in the library catalog.
+
 class Member : public User {
 private:
     Library* lib = nullptr; // Pointer to the Library instance the member interacts with
@@ -19,8 +19,10 @@ public:
 
     // Parameterized constructor
     // Initializes a Member with id, name, email, membership date, and associated Library
-    Member(int id, const string& name, const string& email,
-           const string& membershipDate, Library* lib);
+
+    Member(int id, const std::string& name, const std::string& email,
+           const std::string& membershipDate, Library* lib);
+
 
     // Display member information (ID and Name)
     void display() const override;
@@ -33,3 +35,4 @@ public:
 #endif // MEMBER_H
 
 // Emma Das
+
