@@ -9,11 +9,10 @@
  * - Supports CSV serialization for file I/O
  */
 
-#include "../headers/Transaction.h"
+#include "Transaction.h"
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <ctime>
 
 // ==================== PRIVATE HELPER METHODS ====================
 
@@ -31,10 +30,7 @@ bool Transaction::parseDateToComponents(const std::string &dateStr,
                                         int &year, int &month, int &day)
 {
     // ===== EDGE CASE: Empty date string =====
-    if (dateStr.empty())
-    {
-        return false;
-    }
+    if (dateStr.length() < 10) return false;
 
     // ===== EDGE CASE: Invalid length =====
     // "YYYY-MM-DD" should be exactly 10 characters
@@ -45,10 +41,7 @@ bool Transaction::parseDateToComponents(const std::string &dateStr,
 
     // ===== EDGE CASE: Missing dashes =====
     // Check for dashes at positions 4 and 7
-    if (dateStr[4] != '-' || dateStr[7] != '-')
-    {
-        return false;
-    }
+    if (dateStr[4] != '-' || dateStr[7] != '-') return false;
 
     // Use stringstream for parsing
     // stringstream allows us to parse formatted input easily
@@ -63,22 +56,12 @@ bool Transaction::parseDateToComponents(const std::string &dateStr,
 
     // ===== EDGE CASE: Parsing failure =====
     // Check if stringstream encountered errors
-    if (ss.fail())
-    {
-        return false;
-    }
+    if (ss.fail()) return false;
 
     // ===== EDGE CASE: Invalid month range =====
-    if (month < 1 || month > 12)
-    {
-        return false;
-    }
-
+    if (month < 1 || month > 12) return false;
     // ===== EDGE CASE: Invalid day range =====
-    if (day < 1 || day > 31)
-    {
-        return false;
-    }
+    if (day < 1 || day > 31) return false;
 
     return true; // Parsing successful
 }
@@ -106,7 +89,6 @@ bool Transaction::parseDateToComponents(const std::string &dateStr,
  */
 int Transaction::dateToDays(int year, int month, int day)
 {
-
     return year * 365 + month * 30 + day;
 }
 
@@ -115,7 +97,9 @@ int Transaction::dateToDays(int year, int month, int day)
 // Default Constructor
 
 Transaction::Transaction()
-    : transactionId(""), userId(""), bookId(""), checkoutDate(""), dueDate(""), returnDate(""), status("Active") // New transactions are active by default
+    : transactionId(0), userId(0), bookId(0),
+      checkoutDate(""), dueDate(""), returnDate(""),
+      status("Active")
 {
 }
 
@@ -132,27 +116,21 @@ Transaction::Transaction()
  * Edge Cases:
  * - All IDs must be non-empty (throws if empty)
  */
-Transaction::Transaction(std::string tid, std::string uid, std::string bid,
+Transaction::Transaction(int tid, int uid, int bid,
                          std::string checkout, std::string due)
-    : transactionId(std::move(tid)), userId(std::move(uid)), bookId(std::move(bid)), checkoutDate(std::move(checkout)), dueDate(std::move(due)), returnDate(""), status("Active") // New checkout = active transaction
+    : transactionId(tid), userId(uid), bookId(bid),
+      checkoutDate(std::move(checkout)),
+      dueDate(std::move(due)), returnDate(""),
+      status("Active")
 {
     // ===== EDGE CASE: Empty Transaction ID =====
-    if (transactionId.empty())
-    {
-        throw std::invalid_argument("Transaction ID cannot be empty");
-    }
+    if (tid <= 0) throw std::invalid_argument("Transaction ID must be > 0");
 
     // ===== EDGE CASE: Empty User ID =====
-    if (userId.empty())
-    {
-        throw std::invalid_argument("User ID cannot be empty");
-    }
+    if (uid <= 0) throw std::invalid_argument("User ID must be > 0");
 
     // ===== EDGE CASE: Empty Book ID =====
-    if (bookId.empty())
-    {
-        throw std::invalid_argument("Book ID cannot be empty");
-    }
+    if (bid <= 0) throw std::invalid_argument("Book ID must be > 0");
 
     // ===== EDGE CASE: Empty checkout date =====
     if (checkoutDate.empty())
@@ -172,86 +150,66 @@ Transaction::Transaction(std::string tid, std::string uid, std::string bid,
  Creates a complete transaction including return information
  Used when loading existing transactions from transactions.csv
  */
-Transaction::Transaction(std::string tid, std::string uid, std::string bid,
+Transaction::Transaction(int tid, int uid, int bid,
                          std::string checkout, std::string due,
                          std::string returned, std::string stat)
-    : transactionId(std::move(tid)), userId(std::move(uid)), bookId(std::move(bid)), checkoutDate(std::move(checkout)), dueDate(std::move(due)), returnDate(std::move(returned)), status(std::move(stat))
+    : transactionId(tid), userId(uid), bookId(bid),
+      checkoutDate(std::move(checkout)),
+      dueDate(std::move(due)), returnDate(std::move(returned)),
+      status(std::move(stat))
 {
     // Validation for required fields
-    if (transactionId.empty())
-    {
-        throw std::invalid_argument("Transaction ID cannot be empty");
-    }
-    if (userId.empty())
-    {
-        throw std::invalid_argument("User ID cannot be empty");
-    }
-    if (bookId.empty())
-    {
-        throw std::invalid_argument("Book ID cannot be empty");
-    }
+    if (tid <= 0) throw std::invalid_argument("Transaction ID must be > 0");
+    if (uid <= 0) throw std::invalid_argument("User ID must be > 0");
+    if (bid <= 0) throw std::invalid_argument("Book ID must be > 0");
 
     // ===== EDGE CASE: Invalid status =====
     // Status should be one of: "Active", "Returned", "Returned-Late"
-    if (status != "Active" && status != "Returned" && status != "Returned-Late")
+    if (status != "Active" &&
+        status != "Returned" &&
+        status != "Returned-Late")
     {
-        // Default to "Active" if invalid status provided
         status = "Active";
     }
 }
 
 // ==================== SETTERS ====================
 
-void Transaction::setTransactionId(const std::string &tid)
-{
-    if (tid.empty())
-    {
-        throw std::invalid_argument("Transaction ID cannot be empty");
-    }
+void Transaction::setTransactionId(int tid) {
+    if (tid <= 0) throw std::invalid_argument("Transaction ID must be > 0");
     transactionId = tid;
 }
 
-void Transaction::setUserId(const std::string &uid)
-{
-    if (uid.empty())
-    {
-        throw std::invalid_argument("User ID cannot be empty");
-    }
+void Transaction::setUserId(int uid) {
+    if (uid <= 0) throw std::invalid_argument("User ID must be > 0");
     userId = uid;
 }
 
-void Transaction::setBookId(const std::string &bid)
-{
-    if (bid.empty())
-    {
-        throw std::invalid_argument("Book ID cannot be empty");
-    }
+void Transaction::setBookId(int bid) {
+    if (bid <= 0) throw std::invalid_argument("Book ID must be > 0");
     bookId = bid;
 }
 
-void Transaction::setCheckoutDate(const std::string &date)
-{
+void Transaction::setCheckoutDate(const std::string& date) {
     checkoutDate = date;
 }
 
-void Transaction::setDueDate(const std::string &date)
-{
+void Transaction::setDueDate(const std::string& date) {
     dueDate = date;
 }
 
-void Transaction::setReturnDate(const std::string &date)
-{
+void Transaction::setReturnDate(const std::string& date) {
     returnDate = date;
 }
 
-void Transaction::setStatus(const std::string &s)
-{
+void Transaction::setStatus(const std::string& s) {
     // ===== EDGE CASE: Invalid status value =====
     // Only accept valid status values
-    if (s != "Active" && s != "Returned" && s != "Returned-Late")
+    if (s != "Active" &&
+        s != "Returned" &&
+        s != "Returned-Late")
     {
-        throw std::invalid_argument(
-            "Invalid status. Must be 'Active', 'Returned', or 'Returned-Late'");
+        throw std::invalid_argument("Invalid status value.");
     }
     status = s;
 }
@@ -286,10 +244,7 @@ int Transaction::calculateDaysLate() const
     // ===== EDGE CASE: Book not returned yet =====
     // If returnDate is empty, the book hasn't been returned
     // No late fee until it's actually returned
-    if (returnDate.empty())
-    {
-        return 0;
-    }
+    if (returnDate.empty()) return 0;
 
     // Parse due date into components
     int dueYear, dueMonth, dueDay;
@@ -342,23 +297,16 @@ int Transaction::calculateDaysLate() const
  * - Empty return date -> throws invalid_argument
  * - Already returned -> throws runtime_error
  */
-void Transaction::completeReturn(const std::string &returnDateStr)
+void Transaction::completeReturn(const std::string& returnDateStr)
 {
     // ===== EDGE CASE: Empty return date =====
     if (returnDateStr.empty())
-    {
-        throw std::invalid_argument("Return date cannot be empty");
-    }
+        throw std::invalid_argument("Return date cannot be empty.");
 
     // ===== EDGE CASE: Already returned =====
     // Cannot return a book that's already been returned
     if (status != "Active")
-    {
-        throw std::runtime_error(
-            "Transaction " + transactionId + " is already completed. "
-                                             "Status: " +
-            status);
-    }
+        throw std::runtime_error("Transaction already completed.");
 
     // Set the return date
     returnDate = returnDateStr;
@@ -366,14 +314,7 @@ void Transaction::completeReturn(const std::string &returnDateStr)
     // Calculate if it's late and set appropriate status
     int daysLate = calculateDaysLate();
 
-    if (daysLate > 0)
-    {
-        status = "Returned-Late";
-    }
-    else
-    {
-        status = "Returned";
-    }
+    status = (daysLate > 0 ? "Returned-Late" : "Returned");
 }
 
 /*
@@ -390,21 +331,13 @@ void Transaction::display() const
     std::cout << "Due Date: " << dueDate << "\n";
 
     // Show return date only if book has been returned
-    if (!returnDate.empty())
-    {
+    if (returnDate.empty()) {
+        std::cout << "Return Date: (Not returned)\n";
+    } else {
         std::cout << "Return Date: " << returnDate << "\n";
-
-        // Show days late if applicable
-        int daysLate = calculateDaysLate();
-        if (daysLate > 0)
-        {
-            std::cout << "Days Late: " << daysLate << "\n";
-            std::cout << "Late Fee: $" << (daysLate * 0.50) << "\n";
-        }
-    }
-    else
-    {
-        std::cout << "Return Date: (Not returned yet)\n";
+        int late = calculateDaysLate();
+        if (late > 0)
+            std::cout << "Days Late: " << late << "\n";
     }
 
     std::cout << "Status: " << status << "\n";
@@ -417,9 +350,9 @@ void Transaction::display() const
  */
 std::string Transaction::toCSV() const
 {
-    return transactionId + "," +
-           userId + "," +
-           bookId + "," +
+    return std::to_string(transactionId) + "," +
+           std::to_string(userId) + "," +
+           std::to_string(bookId) + "," +
            checkoutDate + "," +
            dueDate + "," +
            returnDate + "," +
