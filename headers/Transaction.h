@@ -15,13 +15,15 @@
 
 class Transaction {
 private:
-    std::string transactionId;   
-    std::string userId;          
-    std::string bookId;          
-    std::string checkoutDate; 
-    std::string dueDate;  
-    std::string returnDate;   
-    std::string status;  
+    int transactionId;
+    int userId;
+    int bookId;
+
+    std::string checkoutDate;
+    std::string dueDate;
+    std::string returnDate;
+
+    std::string status; // "Active", "Returned", "Returned-Late"
 
     /**
      * parseDateToComponents - Breaks a date string into year, month, day
@@ -35,7 +37,7 @@ private:
 public:
     // ==================== CONSTRUCTORS ====================
      //Default Constructor
-    Transaction();
+    Transaction(); // Default Constructor
     /**
      * Parameterized Constructor - For new checkouts
      * Creates a transaction when a user checks out a book
@@ -45,7 +47,7 @@ public:
      * @param checkout - Checkout date
      * @param due      - Due date
      */
-    Transaction(std::string tid, std::string uid, std::string bid,
+    Transaction(int tid, int uid, int bid,
                 std::string checkout, std::string due);
 
     /**
@@ -61,25 +63,26 @@ public:
      * @param returned - Return date
      * @param stat     - Status ("Active", "Returned", "Returned-Late")
      */
-    Transaction(std::string tid, std::string uid, std::string bid,
+    Transaction(int tid, int uid, int bid,
                 std::string checkout, std::string due,
                 std::string returned, std::string stat);
 
     // ==================== GETTERS ====================
 
-    std::string getTransactionId() const { return transactionId; }
-    std::string getUserId() const { return userId; }
-    std::string getBookId() const { return bookId; }
+    int getTransactionId() const { return transactionId; }
+    int getUserId() const { return userId; }
+    int getBookId() const { return bookId; }
+
     std::string getCheckoutDate() const { return checkoutDate; }
     std::string getDueDate() const { return dueDate; }
     std::string getReturnDate() const { return returnDate; }
     std::string getStatus() const { return status; }
-
     // ==================== SETTERS ====================
 
-    void setTransactionId(const std::string& tid);
-    void setUserId(const std::string& uid);
-    void setBookId(const std::string& bid);
+    void setTransactionId(int tid);
+    void setUserId(int uid);
+    void setBookId(int bid);
+
     void setCheckoutDate(const std::string& date);
     void setDueDate(const std::string& date);
     void setReturnDate(const std::string& date);
@@ -114,7 +117,7 @@ public:
      * Updates the return date and status based on whether it's late
      *
      * @param returnDateStr - The date the book was returned
-     
+
     Edge Cases:
       -Empty return date -> throws invalid_argument
      -Transaction already completed -> throws runtime_error
@@ -131,4 +134,5 @@ public:
 
     std::string toCSV() const;
 };
+
 #endif
