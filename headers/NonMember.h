@@ -13,8 +13,8 @@ private:
 
 public:
     NonMember() = default;
-    NonMember(int id, const string& name, const string& email,
-              const string& membershipDate, Library* lib);
+    NonMember(int id, const std::string& name, const std::string& email,
+              const std::string& membershipDate, Library* lib);
 
     void display() const override;
     void menu() override;
@@ -23,3 +23,4 @@ public:
 #endif // NONMEMBER_H
 
 // Emma Das
+
