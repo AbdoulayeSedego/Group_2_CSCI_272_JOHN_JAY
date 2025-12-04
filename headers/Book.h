@@ -16,7 +16,7 @@ The 'Book' class represents a book entity in the library system.
 class Book
 {
 private:
-    std::string bookId;
+    int bookId;             // Unique integer ID
     std::string title;
     std::string author;
     std::string isbn;
@@ -39,24 +39,28 @@ public:
      * @param total     - Total copies owned by library
      * @param available - Currently available copies
      */
-    Book(std::string id, std::string t, std::string a,
-         std::string isbnNum, int total, int available);
+    Book(int id,
+         const std::string& t,
+         const std::string& a,
+         const std::string& isbnNum,
+         int total,
+         int available);
 
     // ==================== GETTERS ====================
 
-    std::string getBookId() const { return bookId; }
-    std::string getTitle() const { return title; }
-    std::string getAuthor() const { return author; }
-    std::string getIsbn() const { return isbn; }
+    int getBookId() const { return bookId; }
+    const std::string& getTitle() const { return title; }
+    const std::string& getAuthor() const { return author; }
+    const std::string& getIsbn() const { return isbn; }
     int getTotalCopies() const { return totalCopies; }
     int getAvailableCopies() const { return availableCopies; }
 
     // ==================== SETTERS ====================
 
-    void setBookId(const std::string &id);
-    void setTitle(const std::string &t);
-    void setAuthor(const std::string &a);
-    void setIsbn(const std::string &i);
+    void setBookId(int id);
+    void setTitle(const std::string& t);
+    void setAuthor(const std::string& a);
+    void setIsbn(const std::string& i);
 
     // Sets total copies with validation
     void setTotalCopies(int total);
