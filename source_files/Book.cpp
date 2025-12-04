@@ -6,20 +6,20 @@ Contains all method definitions for book operations.
  Author: Abdoulaye Sedego
 */
 
-#include "../headers/Book.h"
+#include "Book.h"
 #include <iostream>
 #include <stdexcept> // For exception classes (runtime_error, invalid_argument)
 
 // ==================== CONSTRUCTORS ====================
 // Default Constructor
 Book::Book()
-    : bookId("") // Initialize to empty string
-      ,
-      title(""), author(""), isbn(""), totalCopies(0) // Initialize to 0 - no copies by default
-      ,
+    : bookId(0),
+      title(""),
+      author(""),
+      isbn(""),
+      totalCopies(0),
       availableCopies(0)
-{
-}
+{}
 
 /**
  * Parameterized Constructor
@@ -30,41 +30,30 @@ Book::Book()
  * @param total     - Total copies owned by library
  * @param available - Currently available copies
  */
-Book::Book(std::string id, std::string t, std::string a,
-           std::string isbnNum, int total, int available)
-    : bookId(std::move(id)) // std::move avoids unnecessary string copies
-      ,
-      title(std::move(t)), author(std::move(a)), isbn(std::move(isbnNum)), totalCopies(total), availableCopies(available)
+Book::Book(int id,
+           const std::string& t,
+           const std::string& a,
+           const std::string& isbnNum,
+           int total,
+           int available)
+    : bookId(id),
+      title(t),
+      author(a),
+      isbn(isbnNum),
+      totalCopies(total),
+      availableCopies(available)
 {
-    // ===== EDGE CASE: Empty book ID =====
-    // Every book must have a unique identifier for tracking them
-    if (bookId.empty())
-    {
-        throw std::invalid_argument("Book ID cannot be empty");
-    }
+    if (id < 0)
+        throw std::invalid_argument("Book ID cannot be negative.");
 
-    // ===== EDGE CASE: Negative total copies =====
-    // A library cannot own a negative number of books
     if (total < 0)
-    {
-        throw std::invalid_argument("Total copies cannot be negative");
-    }
+        throw std::invalid_argument("Total copies cannot be negative.");
 
-    // ===== EDGE CASE: Negative available copies =====
-    // Available copies cannot be less than 0
     if (available < 0)
-    {
-        throw std::invalid_argument("Available copies cannot be negative");
-    }
+        throw std::invalid_argument("Available copies cannot be negative.");
 
-    // ===== EDGE CASE: Available > Total =====
-    // Cannot have more available copies than total owned
-    // Example: If library owns 5 copies, cannot have 7 available
     if (available > total)
-    {
-        throw std::invalid_argument(
-            "Available copies cannot exceed total copies");
-    }
+        throw std::invalid_argument("Available copies cannot exceed total copies.");
 }
 
 // ==================== SETTERS WITH VALIDATION ====================
@@ -72,13 +61,10 @@ Book::Book(std::string id, std::string t, std::string a,
 /**
  * setBookId - Sets the book's unique identifier
  */
-void Book::setBookId(const std::string &id)
-{
+void Book::setBookId(int id) {
     // ===== EDGE CASE: Empty ID =====
-    if (id.empty())
-    {
-        throw std::invalid_argument("Book ID cannot be empty");
-    }
+    if (id < 0)
+        throw std::invalid_argument("Book ID cannot be negative.");
     bookId = id;
 }
 
@@ -86,8 +72,7 @@ void Book::setBookId(const std::string &id)
  setTitle - Sets the book's title
  Empty titles are allowed (some books may have no title initially)
  */
-void Book::setTitle(const std::string &t)
-{
+void Book::setTitle(const std::string& t) {
     title = t;
 }
 
@@ -95,8 +80,7 @@ void Book::setTitle(const std::string &t)
  * setAuthor - Sets the book's author
    Empty authors are allowed (anonymous authors)
  */
-void Book::setAuthor(const std::string &a)
-{
+void Book::setAuthor(const std::string& a) {
     author = a;
 }
 
@@ -104,8 +88,7 @@ void Book::setAuthor(const std::string &a)
  * setIsbn - Sets the book's ISBN
    Empty ISBN allowed (some older books don't have ISBN)
  */
-void Book::setIsbn(const std::string &i)
-{
+void Book::setIsbn(const std::string& i) {
     isbn = i;
 }
 
@@ -117,23 +100,17 @@ void Book::setIsbn(const std::string &i)
  * New total < current available -> throws invalid_argument
  *    (Cannot reduce total below what's currently in the library)
  */
-void Book::setTotalCopies(int total)
-{
+void Book::setTotalCopies(int total) {
     // ===== EDGE CASE: Negative total =====
     if (total < 0)
-    {
-        throw std::invalid_argument("Total copies cannot be negative");
-    }
+        throw std::invalid_argument("Total copies cannot be negative.");
 
     // ===== EDGE CASE: Total less than available =====
     // Example: If 3 copies are available, cannot set total to 2
     // This would create an impossible state
     if (total < availableCopies)
-    {
         throw std::invalid_argument(
-            "Total copies cannot be less than available copies. "
-            "Some books would disappear!");
-    }
+            "Total copies cannot be less than currently available copies.");
 
     totalCopies = total;
 }
@@ -145,21 +122,16 @@ void Book::setTotalCopies(int total)
  * 1. Negative available -> throws invalid_argument
  * 2. Available > total -> throws invalid_argument
  */
-void Book::setAvailableCopies(int available)
-{
+void Book::setAvailableCopies(int available) {
     // ===== EDGE CASE: Negative available =====
     if (available < 0)
-    {
-        throw std::invalid_argument("Available copies cannot be negative");
-    }
+        throw std::invalid_argument("Available copies cannot be negative.");
 
     // ===== EDGE CASE: Available exceeds total =====
     // Cannot have more books available than the library owns
     if (available > totalCopies)
-    {
         throw std::invalid_argument(
-            "Available copies cannot exceed total copies");
-    }
+            "Available copies cannot exceed total copies.");
 
     availableCopies = available;
 }
@@ -184,17 +156,12 @@ void Book::setAvailableCopies(int available)
  *   book.checkout();  // availableCopies becomes 0
  *   book.checkout();  // THROWS runtime_error!
  */
-void Book::checkout()
-{
+void Book::checkout() {
     // ===== EDGE CASE: No copies available =====
     // Check BEFORE decrementing to prevent going negative
     if (availableCopies <= 0)
-    {
         throw std::runtime_error(
-            "Cannot checkout book '" + title + "' - No copies available. "
-                                               "All " +
-            std::to_string(totalCopies) + " copies are currently checked out.");
-    }
+            "No copies available for checkout.");
 
     // Safe to decrement - we have at least 1 copy available
     availableCopies--;
@@ -216,20 +183,13 @@ void Book::checkout()
  *   Book book("B001", "Clean Code", "Robert Martin", "123", 3, 3);
  *   book.returnBook();  // THROWS! All 3 copies are already here
  */
-void Book::returnBook()
-{
+void Book::returnBook() {
     // ===== EDGE CASE: All copies already returned =====
     // If available == total, all books are on the shelf
     // Returning another would create more copies than we own!
     if (availableCopies >= totalCopies)
-    {
         throw std::runtime_error(
-            "Cannot return book '" + title + "' - All copies are already in the library. "
-                                             "Available: " +
-            std::to_string(availableCopies) +
-            ", Total: " + std::to_string(totalCopies) +
-            ". This may indicate a tracking error.");
-    }
+            "All copies are already in the library.");
 
     // Safe to increment - at least we have 1 copy that is checked out
     availableCopies++;
@@ -237,25 +197,18 @@ void Book::returnBook()
 
 // display() - Prints formatted book information to console
 
-void Book::display() const
-{
-    std::cout << "========================================\n";
+void Book::display() const {
+    std::cout << "=============================\n";
     std::cout << "Book ID: " << bookId << "\n";
-    std::cout << "Title: " << title << "\n";
-    std::cout << "Author: " << author << "\n";
-    std::cout << "ISBN: " << isbn << "\n";
-    std::cout << "Copies: " << availableCopies << "/" << totalCopies << " available\n";
-
-    // Display availability status
-    if (isAvailable())
-    {
-        std::cout << "Status: AVAILABLE\n";
-    }
-    else
-    {
-        std::cout << "Status: OUT OF STOCK\n";
-    }
-    std::cout << "========================================\n";
+    std::cout << "Title:   " << title << "\n";
+    std::cout << "Author:  " << author << "\n";
+    std::cout << "ISBN:    " << isbn << "\n";
+    std::cout << "Available: " << availableCopies
+              << "/" << totalCopies << "\n";
+    std::cout << "Status: "
+              << (isAvailable() ? "AVAILABLE" : "OUT OF STOCK")
+              << "\n";
+    std::cout << "=============================\n";
 }
 
 /**
@@ -272,10 +225,10 @@ void Book::display() const
 std::string Book::toCSV() const
 {
     // Build CSV string with comma separators
-    return bookId + "," +
-           title + "," +
-           author + "," +
-           isbn + "," +
-           std::to_string(totalCopies) + "," +
-           std::to_string(availableCopies);
+    return std::to_string(bookId) + "," +
+            title + "," +
+            author + "," +
+            isbn + "," +
+            std::to_string(totalCopies) + "," +
+            std::to_string(availableCopies);
 }
