@@ -1,3 +1,7 @@
+//
+// Created by ksilv on 11/24/2025.
+//
+
 #include "Admin.h"
 #include <iostream>
 #include <limits>
@@ -14,8 +18,10 @@ Admin::Admin()
 
 Admin::Admin(int userID,
              const std::string& name,
-             const std::string& email)
-    : User(userID, name, email, "Admin") // explicitly set type = Admin
+             const std::string& email,
+             const std::string& uType,
+             const std::string& uDate)
+    : User(userID, name, email, "Admin", uDate) // explicitly set type = Admin
 {
 }
 
@@ -25,7 +31,7 @@ Admin::Admin(int userID,
 
 void Admin::display() const {
     std::cout << "===== ADMIN USER =====\n";
-    std::cout << "ID: " << getUserId() << "\n";
+    std::cout << "ID: " << getUserID() << "\n";
     std::cout << "Name: " << getName() << "\n";
     std::cout << "Email: " << getEmail() << "\n";
 }
@@ -158,3 +164,9 @@ void Admin::manageInventory() {
         std::cout << "Error updating inventory: " << e.what() << "\n";
     }
 }
+
+
+
+
+
+
