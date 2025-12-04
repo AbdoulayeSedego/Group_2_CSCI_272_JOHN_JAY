@@ -8,24 +8,30 @@
  **/
 
 #include "User.h"
-// #include "Book.h"
-// #include "Library.h"
+#include "Library.h"
 
+// Admin class:
+// - Has full access to Library operations
+// - Can add/remove books
+// - Can manage inventory
 class Admin : public User {
 public:
-    // Constructors (Default & Parametrized)
+    // Constructors
     Admin();
+    Admin(int userID,
+          const std::string& name,
+          const std::string& email);
 
-    Admin(int userID, const std::string &name, const std::string &email, const std::string &userType,
-          const std::string &membershipDate);
-
-    // Overridden Functions
-    // These have been declared in User.h and must be overridden
+    // Display admin info
     void display() const override;
+
+    // Main admin menu loop
     void menu() override;
 
-    // Declare functions specific to this user
+private:
+    // Admin actions
     void addBook();
     void removeBook();
     void manageInventory();
 };
+
