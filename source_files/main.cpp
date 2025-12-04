@@ -1,3 +1,4 @@
+// Include header files (use -I headers flag when compiling)
 #include "Library.h"
 #include "Admin.h"
 #include "Librarian.h"
@@ -12,8 +13,9 @@ int main() {
     Library::instance().loadFromCSV();
 
     // Create example users for demonstration purposes
-    Admin admin(1, "Alice Admin", "alice@lib.org", "2023-01-01", &Library::instance());
-    Librarian librarian(2, "Bob Librarian", "bob@lib.org", "2023-02-01", &Library::instance());
+    // Constructor params: (userID, name, email, userType, membershipDate)
+    Admin admin(1, "Alice Admin", "alice@lib.org", "Admin", "2023-01-01");
+    Librarian librarian(2, "Bob Librarian", "bob@lib.org", "Librarian", "2023-02-01");
     Member member(3, "Carol Member", "carol@lib.org", "2023-03-01", &Library::instance());
     NonMember guest(4, "Dave Guest", "dave@guest.org", "2023-04-01", &Library::instance());
 

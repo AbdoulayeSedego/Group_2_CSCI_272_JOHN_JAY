@@ -39,24 +39,26 @@ void Member::menu() {
             string kw;
             getline(cin >> ws, kw); // ws consumes any leading whitespace
 
+            // Use getter methods to access private Book members (encapsulation)
             auto results = Library::instance().searchBooks([&](const Book& b) {
-                return b.title.find(kw) != string::npos
-                       || b.author.find(kw) != string::npos
-                       || b.isbn.find(kw) != string::npos;
+                return b.getTitle().find(kw) != string::npos
+                       || b.getAuthor().find(kw) != string::npos
+                       || b.getIsbn().find(kw) != string::npos;
             });
 
             if (results.empty())
                 cout << "No matches found.\n";
             else
+                // Access Book data through public getters
                 for (auto p : results)
-                    cout << p->bookId << ": " << p->title << " | " << p->author
-                         << " | avail: " << p->availableCopies << "\n";
+                    cout << p->getBookId() << ": " << p->getTitle() << " | " << p->getAuthor()
+                         << " | avail: " << p->getAvailableCopies() << "\n";
 
         } else if (opt == 2) {
-            // View all books in the library
+            // View all books in the library using public getters
             for (const auto& b : Library::instance().getAllBooks()) {
-                cout << b.bookId << ": " << b.title << " | " << b.author
-                     << " | available: " << b.availableCopies << "\n";
+                cout << b.getBookId() << ": " << b.getTitle() << " | " << b.getAuthor()
+                     << " | available: " << b.getAvailableCopies() << "\n";
             }
 
         } else if (opt == 3) {
