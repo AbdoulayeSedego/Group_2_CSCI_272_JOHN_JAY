@@ -1,3 +1,6 @@
+#ifndef ADMIN_H
+#define ADMIN_H
+
 /**
  * Admin.h & Admin.cpp
  *
@@ -20,7 +23,9 @@ public:
     Admin();
     Admin(int userID,
           const std::string& name,
-          const std::string& email);
+          const std::string& email,
+          const std::string& uType,
+          const std::string& uDate);
 
     // Display admin info
     void display() const override;
@@ -35,3 +40,4 @@ private:
     void manageInventory();
 };
 
+#endif
