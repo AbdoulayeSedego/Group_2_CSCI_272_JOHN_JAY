@@ -7,64 +7,110 @@
 #include "Transaction.h"
 #include "Fine.h"
 
-using namespace std;
+// -----------------------------------------------------------------------------
+// Library (Singleton)
+// -----------------------------------------------------------------------------
+// Responsibilities:
+// - Manage all books, transactions, and fines
+// - Process checkout and returns
+// - File persistence (CSV)
+// - Provide search functionality
+//
+// NOTE:
+// The Library has no public constructor. Use Library::instance() to access it.
+// -----------------------------------------------------------------------------
 
-// Singleton library class: manages books, transactions, fines, and file persistence
 class Library {
 private:
-    vector<Book> books;               // Collection of all books in the library
-    vector<Transaction> transactions; // All checkout/return transactions
-    vector<Fine> fines;               // Fines issued for late returns
+    // -----------------------
+    // Internal Data Storage
+    // -----------------------
+    std::vector<Book> books;
+    std::vector<Transaction> transactions;
+    std::vector<Fine> fines;
 
-    int nextBookId = 1;        // ID to assign to the next book added
-    int nextTransactionId = 1; // ID to assign to the next transaction
+    int nextBookId = 1;
+    int nextTransactionId = 1;
 
-    // Private constructor for singleton pattern
+    // Private constructor (Singleton)
     Library();
 
 public:
-    // Delete copy constructor and assignment operator to enforce singleton
+    // Delete copy operations (Singleton enforcement)
     Library(const Library&) = delete;
     Library& operator=(const Library&) = delete;
 
-    // Get the single instance of the Library
+    // Global access point
     static Library& instance();
 
-    // Find a book by its unique ID. Returns nullptr if not found
+    // -----------------------
+    // Book Management
+    // -----------------------
+
+    // Find book by ID (returns nullptr if not found)
     Book* findBookById(int id);
 
-    // Generic search using a predicate (lambda or function)
-    // Example: searchBooks([](Book& b){ return b.title == "Book"; });
+    // Add book — returns the created book ID
+    int addBook(const std::string& title,
+                const std::string& author,
+                const std::string& isbn,
+                int copies);
+
+    // Remove book — returns true if removed
+    bool removeBook(int id);
+
+    // Get reference to all books
+    std::vector<Book>& getAllBooks();
+
+    // -----------------------
+    // Book Search (Generic)
+    // -----------------------
     template <typename Predicate>
-    vector<Book*> searchBooks(Predicate pred) {
-        vector<Book*> results;
+    std::vector<Book*> searchBooks(Predicate pred) {
+        std::vector<Book*> results;
         for (auto& b : books) {
             if (pred(b)) results.push_back(&b);
         }
         return results;
     }
 
-    // Inventory management
-    int addBook(const string& title, const string& author, const string& isbn, int copies); // Add new book
-    bool removeBook(int id);                                                                    // Remove book by ID
-    vector<Book>& getAllBooks();                                                                // Get reference to all books
+    // -----------------------
+    // Checkout / Return
+    // -----------------------
 
-    // Rental operations
-    int checkoutBook(int userId, int bookId, const string& checkoutDate, const string& dueDate); // Checkout book
-    Fine processReturn(int transactionId, const string& returnDate);                               // Process book return and calculate fine
+    // Checkout a book and create a transaction
+    int checkoutBook(int userId,
+                     int bookId,
+                     const std::string& checkoutDate,
+                     const std::string& dueDate);
 
-    // Utility function: calculate days between two YYYY-MM-DD dates
-    static int daysBetween(const string& d1, const string& d2);
+    // Process return and compute any fine
+    Fine processReturn(int transactionId,
+                       const std::string& returnDate);
 
-    // Persistence: load/save books and transactions to CSV files
-    void loadFromCSV(const string& booksFile = "books.csv", const string& transFile = "transactions.csv");
-    void saveToCSV(const string& booksFile = "books.csv", const string& transFile = "transactions.csv");
+    // -----------------------
+    // Date Utility
+    // -----------------------
+    static int daysBetween(const std::string& d1,
+                           const std::string& d2);
 
-    // Accessors for transaction and fine logs
-    vector<Transaction>& getTransactions();
-    vector<Fine>& getFines();
+    // -----------------------
+    // File Persistence (CSV)
+    // -----------------------
+    void loadFromCSV(const std::string& booksFile = "books.csv",
+                     const std::string& transFile = "transactions.csv");
+
+    void saveToCSV(const std::string& booksFile = "books.csv",
+                   const std::string& transFile = "transactions.csv");
+
+    // -----------------------
+    // Logs
+    // -----------------------
+    std::vector<Transaction>& getTransactions();
+    std::vector<Fine>& getFines();
 };
 
 #endif // LIBRARY_H
 
 // Emma Das
+
