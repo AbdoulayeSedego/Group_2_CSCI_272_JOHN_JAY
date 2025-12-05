@@ -1,4 +1,3 @@
-// Include header files (use -I headers flag when compiling)
 #include "Library.h"
 #include "Admin.h"
 #include "Librarian.h"
