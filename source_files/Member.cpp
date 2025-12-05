@@ -3,70 +3,177 @@
 #include <iostream>
 #include <limits>
 
-// Constructor: initialize Member with basic user info and associated Library
+// Constructor
 Member::Member(int id, const std::string& name, const std::string& email,
                const std::string& membershipDate, Library* lib)
     : User(id, name, email, "Member", membershipDate),
       lib(lib)
 {}
 
-// Display basic information about the member
+// Display basic information
 void Member::display() const {
     std::cout << "**** MEMBER ****\n";
     std::cout << "ID: " << userID << " | Name: " << name << "\n";
 }
 
-// Member menu: allows searching books, viewing inventory, or exiting
+// -------------------------------
+// Borrow a Book
+// -------------------------------
+void Member::borrowBook() {
+    int bookId;
+    std::cout << "Enter Book ID to borrow: ";
+
+    if (!(std::cin >> bookId)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Invalid input.\n";
+        return;
+    }
+
+    std::string checkoutDate, dueDate;
+    std::cout << "Enter checkout date (YYYY-MM-DD): ";
+    std::cin >> checkoutDate;
+    std::cout << "Enter due date (YYYY-MM-DD): ";
+    std::cin >> dueDate;
+
+    try {
+        int transactionId = Library::instance().checkoutBook(
+            userID, bookId, checkoutDate, dueDate
+        );
+        std::cout << "Book borrowed successfully! Transaction ID: "
+                  << transactionId << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Error: " << e.what() << "\n";
+    }
+}
+
+// -------------------------------
+// Return a Book
+// -------------------------------
+void Member::returnBook() {
+    int transId;
+    std::cout << "Enter Transaction ID to return book: ";
+
+    if (!(std::cin >> transId)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Invalid input.\n";
+        return;
+    }
+
+    std::string returnDate;
+    std::cout << "Enter return date (YYYY-MM-DD): ";
+    std::cin >> returnDate;
+
+    try {
+        Fine fine = Library::instance().processReturn(transId, returnDate);
+        std::cout << "Book returned successfully.\n";
+        std::cout << "Fine amount: $" << fine.getAmount() << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Error: " << e.what() << "\n";
+    }
+}
+
+// -------------------------------
+// View All Borrowed Books
+// -------------------------------
+void Member::viewMyBorrowedBooks() const {
+    auto& trans = Library::instance().getTransactions();
+    bool found = false;
+
+    std::cout << "\n=== My Borrowed Books ===\n";
+
+    for (const auto& t : trans) {
+        if (t.getUserId() == userID && t.isActive()) {
+            found = true;
+
+            Book* b = Library::instance().findBookById(t.getBookId());
+            if (b) {
+                std::cout << "Transaction ID: " << t.getTransactionId()
+                          << " | Book: " << b->getTitle()
+                          << " | Due: " << t.getDueDate() << "\n";
+            }
+        }
+    }
+
+    if (!found)
+        std::cout << "You have no borrowed books.\n";
+}
+
+// -------------------------------
+// Member Menu
+// -------------------------------
 void Member::menu() {
     while (true) {
         std::cout << "\n=== Member Menu ===\n"
-             << "1) Search Books\n2) View Inventory\n3) Exit\n"
-             << "Choose: ";
+                  << "1) Search Books\n"
+                  << "2) View Inventory\n"
+                  << "3) Borrow Book\n"
+                  << "4) Return Book\n"
+                  << "5) View My Borrowed Books\n"
+                  << "6) Exit\n"
+                  << "Choose: ";
 
         int opt;
-        // Input validation: if invalid, clear and ignore input buffer
         if (!(std::cin >> opt)) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             continue;
         }
 
-        if (opt == 1) {
-            // Search books by keyword in title, author, or ISBN
-            std::cout << "Enter keyword (title/author/ISBN): ";
-            std::string kw;
-            std::getline(std::cin >> std::ws, kw); // ws consumes any leading whitespace
+        switch (opt) {
+            case 1: {
+                std::cout << "Enter keyword (title/author/ISBN): ";
+                std::string kw;
+                std::getline(std::cin >> std::ws, kw);
 
-            // Use getter methods to access private Book members (encapsulation)
-            auto results = Library::instance().searchBooks([&](const Book& b) {
-                return b.getTitle().find(kw) != std::string::npos
-                       || b.getAuthor().find(kw) != std::string::npos
-                       || b.getIsbn().find(kw) != std::string::npos;
-            });
+                auto results = Library::instance().searchBooks([&](const Book& b) {
+                    return b.getTitle().find(kw) != std::string::npos
+                        || b.getAuthor().find(kw) != std::string::npos
+                        || b.getIsbn().find(kw) != std::string::npos;
+                });
 
-            if (results.empty())
-                std::cout << "No matches found.\n";
-            else
-                // Access Book data through public getters
-                for (auto p : results)
-                    std::cout << p->getBookId() << ": " << p->getTitle() << " | " << p->getAuthor()
-                         << " | avail: " << p->getAvailableCopies() << "\n";
-
-        } else if (opt == 2) {
-            // View all books in the library using public getters
-            for (const auto& b : Library::instance().getAllBooks()) {
-                std::cout << b.getBookId() << ": " << b.getTitle() << " | " << b.getAuthor()
-                     << " | available: " << b.getAvailableCopies() << "\n";
+                if (results.empty())
+                    std::cout << "No matches found.\n";
+                else
+                    for (auto p : results)
+                        std::cout << p->getBookId() << ": "
+                                  << p->getTitle() << " | "
+                                  << p->getAuthor()
+                                  << " | avail: "
+                                  << p->getAvailableCopies()
+                                  << "\n";
+                break;
             }
 
-        } else if (opt == 3) {
-            // Exit the member menu
-            return;
+            case 2:
+                for (const auto& b : Library::instance().getAllBooks()) {
+                    std::cout << b.getBookId() << ": "
+                              << b.getTitle() << " | "
+                              << b.getAuthor()
+                              << " | available: "
+                              << b.getAvailableCopies() << "\n";
+                }
+                break;
 
-        } else {
-            std::cout << "Invalid option\n"; // Handle invalid input
+            case 3:
+                borrowBook();
+                break;
+
+            case 4:
+                returnBook();
+                break;
+
+            case 5:
+                viewMyBorrowedBooks();
+                break;
+
+            case 6:
+                return;
+
+            default:
+                std::cout << "Invalid option\n";
+                break;
         }
     }
 }
-
-// Emma Das
