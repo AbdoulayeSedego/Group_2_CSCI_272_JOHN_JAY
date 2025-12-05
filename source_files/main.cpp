@@ -4,8 +4,7 @@
 #include "Member.h"
 #include "NonMember.h"
 #include <iostream>
-
-using namespace std;
+#include <limits>
 
 int main() {
     // Load persisted data (books and transactions) from CSV
@@ -27,15 +26,15 @@ int main() {
 
     // Top-level menu loop
     while (true) {
-        cout << "\n=== Library System ===\n"
-             << "1) Admin\n2) Librarian\n3) Member\n4) NonMember\n5) Exit\n"
-             << "Choose: ";
+        std::cout << "\n=== Library System ===\n"
+                  << "1) Admin\n2) Librarian\n3) Member\n4) NonMember\n5) Exit\n"
+                  << "Choose: ";
 
         int opt;
         // Validate input; if invalid, clear input buffer and continue
-        if (!(cin >> opt)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (!(std::cin >> opt)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             continue;
         }
 
@@ -47,10 +46,10 @@ int main() {
             case 4: guest.menu(); break;       // Non-member menu
             case 5:                           // Exit option
                 Library::instance().saveToCSV(); // Save current data to CSV
-                cout << "Goodbye\n";
+                std::cout << "Goodbye\n";
                 return 0;
             default:
-                cout << "Invalid option\n";  // Handle invalid input
+                std::cout << "Invalid option\n";  // Handle invalid input
         }
     }
 }

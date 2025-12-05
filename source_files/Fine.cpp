@@ -26,4 +26,4 @@ std::string Fine::toString() const {
     return oss.str(); // return string version of amount
 }
 
-// Emma Das
+// Gisneiry

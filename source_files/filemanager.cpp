@@ -3,14 +3,12 @@
 #include <fstream>
 #include <iostream>
 
-using namespace std;
-
-FileManager::FileManager(const string& books,
-                         const string& trans)
+FileManager::FileManager(const std::string& books,
+                         const std::string& trans)
     : booksfile(books), transfile(trans) {}
 
-bool FileManager::exists(const string& file) {
-    ifstream f(file);
+bool FileManager::exists(const std::string& file) {
+    std::ifstream f(file);
     return f.good();
 }
 
@@ -18,18 +16,18 @@ void FileManager::loaddata() {
 
     // check files exist
     if (!exists(booksfile)) {
-        cout << "books file not found\n";
+        std::cout << "books file not found\n";
         return;
     }
     if (!exists(transfile)) {
-        cout << "transactions file not found\n";
+        std::cout << "transactions file not found\n";
         return;
     }
 
     // load using library functions
     Library::instance().loadFromCSV(booksfile, transfile);
 
-    cout << "data loaded\n";
+    std::cout << "data loaded\n";
 }
 
 void FileManager::savedata() {
@@ -37,5 +35,6 @@ void FileManager::savedata() {
     // save using library functions
     Library::instance().saveToCSV(booksfile, transfile);
 
-    cout << "data saved\n";
+    std::cout << "data saved\n";
 }
+

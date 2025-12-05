@@ -26,8 +26,7 @@ public:
 
 #endif // FINE_H
 
-// Emma and Gisneiry
-//Emma implemented most of the code.
-//Gisneiry just removed name name space std, and added more comment with explanation of the code.
+//Gisneiry 
+
 
 
