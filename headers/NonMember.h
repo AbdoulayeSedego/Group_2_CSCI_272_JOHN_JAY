@@ -1,8 +1,8 @@
+
 #ifndef NONMEMBER_H
 #define NONMEMBER_H
 
 #include "User.h"
-using namespace std;
 
 class Library;
 
@@ -23,4 +23,3 @@ public:
 #endif // NONMEMBER_H
 
 // Emma Das
-
